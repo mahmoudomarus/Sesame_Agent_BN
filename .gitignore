@@ -1,0 +1,35 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+*.pyc
+__pycache__/
+
+# Secrets and Config (if storing sensitive info locally - better practice is env vars)
+.env
+secrets.yaml
+
+# Model Weights (These can be large)
+models/
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.gguf
+*.onnx
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# IDE specific folders
+.vscode/
+.idea/
+
+# OS specific
+.DS_Store
+*/.DS_Store
+
+# External Repositories
+external/csm 

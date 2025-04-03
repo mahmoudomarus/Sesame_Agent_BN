@@ -1,0 +1,125 @@
+# Configuration for the Sesame Voice Agent
+
+# --- Speech-to-Text (STT) ---
+stt:
+  # Implementation choice: 'faster-whisper' or 'whisperx'
+  implementation: faster-whisper 
+  # Path to the downloaded model (e.g., from Hugging Face Hub or local)
+  # Example for faster-whisper: 'Systran/faster-whisper-large-v3' or local path
+  model_path: models/faster-whisper-large-v3 
+  # Device: 'cuda', 'cpu'
+  device: cuda
+  # Compute type for faster-whisper: 'float16', 'int8_float16', 'int8'
+  # Compute type for whisperx depends on backend (usually handled internally)
+  compute_type: float16 
+  # For whisperx, batch size for inference (e.g., 16)
+  # batch_size: 16 
+  # For whisperx, path to Diarization model (if used)
+  # diarize_model_path: null 
+  # For whisperx, path to VAD model (if using its VAD)
+  # vad_model_path: null
+
+# --- Language Model (LLM) ---
+llm:
+  # Inference engine: 'vllm', 'llama.cpp', 'transformers'
+  engine: vllm
+  # Path to the model (Hugging Face identifier or local path)
+  # Example: 'microsoft/Phi-3-medium-128k-instruct' or 'meta-llama/Meta-Llama-3-8B-Instruct'
+  model_path: models/Phi-3-medium-128k-instruct 
+  # Device: 'cuda', 'cpu' (often handled by engine, e.g., vLLM defaults to CUDA)
+  device: cuda 
+  # Engine-specific keyword arguments
+  engine_kwargs:
+    # For vLLM:
+    trust_remote_code: True
+    gpu_memory_utilization: 0.8  # Adjusted for 24GB VRAM
+    tensor_parallel_size: 1
+    dtype: 'bfloat16'
+    
+    # For llama.cpp (GGUF models):
+    # n_gpu_layers: -1 # Offload all possible layers to GPU
+    # n_ctx: 4096 # Context window size
+    # verbose: False
+
+    # For transformers:
+    # device_map: 'auto'
+    # torch_dtype: 'auto' # Or 'torch.float16', 'torch.bfloat16'
+    # load_in_4bit: True # Requires bitsandbytes
+    # bnb_4bit_quant_type: 'nf4'
+    # bnb_4bit_compute_dtype: 'torch.bfloat16'
+
+  # Generation parameters
+  generation:
+    max_new_tokens: 150
+    temperature: 0.7
+    top_p: 0.9
+    stop_sequences: ["\nUser:", "</s>"]
+
+# --- Text-to-Speech (TTS) ---
+tts:
+  # Implementation choice (currently assuming 'moshi' for Sesame CSM)
+  implementation: moshi 
+  # Path to the model/config needed by Moshi for Sesame CSM 1B
+  model_path: models/sesame-csm-1b 
+  # Device: 'cuda', 'cpu'
+  device: cuda
+  # Potential Moshi-specific arguments (if any)
+  # speaker_id: null 
+  sample_rate: 24000
+
+# --- Audio Handling & Voice Activity Detection (VAD) ---
+audio:
+  # Input/Output device index (null for default)
+  input_device_index: null
+  output_device_index: null
+  # Sample rate expected by VAD and STT (ensure consistency)
+  sample_rate: 16000 
+  # Audio chunk size for processing (milliseconds). VAD models often prefer specific sizes (e.g., 30ms for Silero).
+  # Let's define chunk_duration_ms and calculate chunk_size in main.py
+  chunk_duration_ms: 30 # Silero VAD works well with 30ms chunks (480 frames at 16kHz)
+  # VAD implementation: 'silero' or 'webrtcvad' or 'whisperx' (if using its VAD)
+  vad_implementation: silero
+  # VAD sensitivity/threshold (0.0 to 1.0). Higher = less sensitive to noise.
+  vad_threshold: 0.5
+  # Minimum duration of silence (ms) to consider an utterance ended.
+  silence_duration_ms: 700 
+  # Maximum duration (seconds) of continuous speech before forcing processing.
+  max_speech_duration_s: 15 
+  # Grace period (ms) after agent finishes speaking before listening for user again.
+  post_playback_delay_ms: 200
+
+# --- RAG Configuration ---
+rag:
+  # Vector store implementation
+  vector_store: faiss
+  # Path to store the FAISS index
+  index_path: models/faiss_index
+  # Path to knowledge base documents
+  knowledge_base_path: knowledge_base
+  # Chunk size for document splitting
+  chunk_size: 512
+  # Number of chunks to retrieve
+  top_k: 3
+  # Embedding model (using sentence-transformers)
+  embedding_model: all-MiniLM-L6-v2
+
+# --- GUI Configuration ---
+gui:
+  # GUI framework choice
+  framework: customtkinter
+  # Theme settings
+  theme: dark
+  # Window dimensions
+  window_width: 800
+  window_height: 600
+  # Conversation display settings
+  max_display_messages: 50
+  # Control settings
+  show_emotion_controls: true
+  show_audio_visualizer: true
+
+# --- General ---
+log_level: INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL
+# Context window size (number of turns or tokens - implement management in main.py)
+# max_history_tokens: 4096 
+max_history_turns: 10 # Keep last 10 turns (5 user, 5 assistant) 
